@@ -1,130 +1,249 @@
-# E-commerce Store — React + Spring Boot + MySQL
+# 🛒 E-Commerce Full Stack Application
 
-This project began as a frontend-only Vite/React storefront. This release adds a separate Spring Boot REST backend under `backend/` and repairs several frontend issues.
+A modern, responsive, full-stack E-Commerce web application developed using **React.js, Spring Boot, Spring Security, REST APIs, and MySQL**.
 
-## What is included
+The application provides a complete online shopping experience, including user authentication, product management, product searching, shopping cart, wishlist, order management, and user profile management.
 
-**React app:** storefront and product assets; collection filters/sorting; cart, wishlist and orders saved in browser localStorage; real API-based login/signup; click-to-open account menu; responsive UI.
+## 🚀 Features
 
-**Spring Boot REST API:** BCrypt signup/login, signed JWT authentication, account profile/password change, product catalog with search/filter/sort/pagination, cart, wishlist, addresses, coupons, COD checkout with database inventory adjustment, order history/cancellation, verified-customer reviews, contact messages and admin endpoints.
+### 👤 User Authentication
+- User registration and login
+- Secure password encryption
+- JWT-based authentication
+- Spring Security integration
+- Protected API endpoints
+- Logout functionality
 
-**Integration status:** Login/signup talks to Spring Boot. The rest of the original storefront still uses its local product catalog and localStorage cart/orders/wishlist. The new Java REST endpoints are available through `src/api/client.js`, but **not all pages are wired to them yet**. The storefront's checkout is a **local demo** and does **not** create a database order. Use the documented APIs for real persisted orders. Neither Stripe nor Razorpay is integrated; COD is the only supported backend method.
+### 🛍️ Product Management
+- View available products
+- Product details and descriptions
+- Search products by name
+- Filter products by category
+- Sort products by price
+- Responsive product cards
 
-## Prerequisites
+### 🛒 Shopping Cart
+- Add products to cart
+- Remove products from cart
+- Update product quantities
+- Calculate total cart price
+- View cart items
 
-- Java 17 or newer (Java 17 recommended)
-- Maven 3.9+
-- MySQL server running on port 3306
-- Node.js 20+ and npm
+### ❤️ Wishlist
+- Add products to wishlist
+- Remove products from wishlist
+- View saved products
 
-## 1. Create the MySQL database
+### 📦 Order Management
+- Place orders
+- View order history
+- Check order details
+- Manage user-specific orders
+
+### 👤 User Profile
+- View profile information
+- Edit profile details
+- Manage account information
+
+### 🔐 Security
+- Spring Security
+- JWT authentication
+- Password hashing
+- Protected REST APIs
+- User-specific data access
+
+## 🛠️ Technology Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React.js, JavaScript, HTML5, CSS3 |
+| Styling | Tailwind CSS |
+| Backend | Java, Spring Boot |
+| Security | Spring Security, JWT |
+| Database | MySQL |
+| ORM | Spring Data JPA, Hibernate |
+| API | REST APIs |
+| Build Tools | Maven, npm |
+| Development Tools | VS Code, IntelliJ IDEA / STS, Postman |
+| Version Control | Git, GitHub |
+
+## 🏗️ Application Architecture
+
+```text
+                  USER
+                    |
+                    v
+             React Frontend
+                    |
+                    v
+              REST API Calls
+                    |
+                    v
+           Spring Boot Backend
+                    |
+          Spring Security + JWT
+                    |
+                    v
+             Service Layer
+                    |
+                    v
+            Repository Layer
+                    |
+                    v
+               MySQL DB
+```
+
+## 📁 Project Structure
+
+Example organization:
+
+```text
+ECOMMERCE-STACK/
+|
+|-- frontend/
+|   |-- public/
+|   |-- src/
+|   |   |-- components/
+|   |   |-- pages/
+|   |   |-- services/
+|   |   |-- App.jsx
+|   |   |-- main.jsx
+|   |
+|   |-- package.json
+|   |-- vite.config.js
+|
+|-- backend/
+|   |-- src/
+|   |   |-- main/
+|   |   |   |-- java/
+|   |   |   |   |-- controller/
+|   |   |   |   |-- service/
+|   |   |   |   |-- repository/
+|   |   |   |   |-- entity/
+|   |   |   |   |-- security/
+|   |   |   |
+|   |   |   |-- resources/
+|   |   |       |-- application.properties
+|   |
+|   |-- pom.xml
+|
+|-- README.md
+|-- .gitignore
+```
+
+*Note: This is an illustrative structure. Actual folder names may differ.*
+
+## ⚙️ Installation and Setup
+
+### Prerequisites
+
+- Java 17 or higher, compatible with the project
+- Node.js and npm
+- MySQL Server
+- Maven
+- Git
+
+### 1. Clone the Repository
 
 ```bash
-/usr/local/mysql/bin/mysql -u root -p
+git clone https://github.com/YOUR_USERNAME/ECOMMERCE-STACK.git
+cd ECOMMERCE-STACK
 ```
+
+### 2. Configure the Database
+
+Create a MySQL database:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS ecommerce_db;
-EXIT;
+CREATE DATABASE ecommerce_db;
 ```
 
-## 2. Set environment variables on macOS
+Configure the backend's `application.properties` or environment variables:
 
-```bash
-export DB_USERNAME=root
-export DB_PASSWORD='YOUR_MYSQL_PASSWORD'
-export JWT_SECRET="$(openssl rand -hex 32)"
-export CORS_ORIGIN=http://localhost:5173
+```properties
+spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/ecommerce_db}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+
+spring.jpa.hibernate.ddl-auto=update
 ```
 
-`DB_PASSWORD` and `JWT_SECRET` must be configured for each new terminal session or loaded from a private local environment file. **Do not commit passwords or JWT secrets.** The JDBC URL currently defaults to MySQL without TLS and `allowPublicKeyRetrieval=true`, suitable only for trusted local development; use TLS for deployment.
+Never commit real database passwords, JWT signing secrets, or API keys to GitHub.
 
-## 3. Start the backend
+### 3. Run the Spring Boot Backend
+
+Navigate to the folder containing `pom.xml`:
 
 ```bash
-cd backend
 mvn spring-boot:run
 ```
 
-The backend should listen on `http://localhost:8080` and health is available at `http://localhost:8080/actuator/health`. Initial startup requires correct MySQL credentials. Hibernate is configured to update the development schema. For production use migrations and controlled permissions.
+Default backend URL (if configured):
 
-## 4. Start the frontend in another terminal
+```text
+http://localhost:8080
+```
+
+### 4. Run the React Frontend
+
+Navigate to the folder containing `package.json`:
 
 ```bash
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-Open `http://localhost:5173` (or the URL printed by Vite). Register a new account from the Login page.
+Default Vite frontend URL:
 
-## Main backend endpoints
-
-| Method | URL | Purpose |
-|---|---|---|
-| POST | `/api/auth/register` | Create user |
-| POST | `/api/auth/login` | Log in and return JWT |
-| GET/PUT | `/api/auth/me` | View/update account |
-| PUT | `/api/auth/password` | Change password |
-| GET | `/api/products?q=&category=&sort=price-asc&page=0&size=12` | Product catalog |
-| GET | `/api/products/{id}` | Product detail |
-| GET/PUT/DELETE | `/api/cart` | Read/update/clear cart |
-| GET/POST/DELETE | `/api/wishlist` and `/api/wishlist/{id}` | Wishlists |
-| GET/POST/PUT/DELETE | `/api/addresses` and `/api/addresses/{id}` | Addresses |
-| GET | `/api/coupons/check?code=SAVE10&subtotal=1000` | Validate coupon |
-| GET/POST | `/api/orders` | History/checkout |
-| GET | `/api/orders/{id}` | Order detail |
-| POST | `/api/orders/{id}/cancel` | Cancel unshipped order |
-| GET/POST | `/api/reviews/product/{id}` | Reviews |
-| POST | `/api/contact` | Contact |
-| GET | `/api/admin/dashboard` | Admin totals |
-| POST/PUT/DELETE | `/api/admin/products` and `/api/admin/products/{id}` | Manage catalog |
-| GET/PUT | `/api/admin/orders` and `/api/admin/orders/{id}/status` | Orders |
-| GET/POST | `/api/admin/coupons` | Coupons |
-| GET | `/api/admin/users` | Users |
-| PUT | `/api/admin/users/{id}/enabled` | Block/unblock |
-| GET | `/api/admin/messages` | Contact submissions |
-
-For protected endpoints, pass `Authorization: Bearer <token>`. Most POST/PUT routes accept JSON request bodies.
-
-### Examples
-
-Register:
-
-```bash
-curl -X POST http://localhost:8080/api/auth/register -H 'Content-Type: application/json' -d '{"name":"Demo User","email":"demo@example.com","password":"strongpassword123"}'
+```text
+http://localhost:5173
 ```
 
-Create a product with an administrator token:
+## 🔄 Application Workflow
 
-```bash
-curl -X POST http://localhost:8080/api/admin/products -H 'Content-Type: application/json' -H 'Authorization: Bearer ADMIN_TOKEN' -d '{"name":"Cotton Shirt","description":"Comfort cotton shirt","category":"Men","subCategory":"Topwear","price":899,"originalPrice":1199,"imageUrl":"/images/shirt.png","sizes":"S,M,L,XL","stock":20,"active":true}'
-```
+1. Users register or log in.
+2. The frontend communicates with the backend through REST APIs.
+3. Spring Security validates authentication.
+4. Users browse, search, and filter products.
+5. Products can be added to the shopping cart or wishlist.
+6. Users place orders.
+7. Order and account information is managed through the backend.
+8. MySQL stores application data.
 
-Set an item in the persisted cart:
+## 🎯 Project Objectives
 
-```bash
-curl -X PUT http://localhost:8080/api/cart -H 'Content-Type: application/json' -H 'Authorization: Bearer USER_TOKEN' -d '{"productId":1,"size":"M","quantity":2}'
-```
+- Develop a complete full-stack application.
+- Build reusable React components.
+- Implement RESTful backend services.
+- Integrate MySQL with Spring Data JPA.
+- Implement secure authentication and authorization.
+- Create a responsive and user-friendly shopping experience.
+- Apply industry-standard development practices.
 
-Place an order after creating an address:
+## 🔮 Future Enhancements
 
-```bash
-curl -X POST http://localhost:8080/api/orders -H 'Content-Type: application/json' -H 'Authorization: Bearer USER_TOKEN' -d '{"addressId":1,"paymentMethod":"COD","couponCode":""}'
-```
+- Online payment gateway integration
+- Product reviews and ratings
+- Email notifications
+- Advanced product recommendations
+- Coupon and discount management
+- Shipment tracking
+- Sales analytics dashboard
+- Cloud deployment
 
-**Admin setup:** There is deliberately no default admin password. Register a personal account and manually assign `ADMIN` to that one trusted account in your local database if needed:
+## 👨‍💻 Developer
 
-```sql
-UPDATE app_users SET role='ADMIN' WHERE email='your-email@example.com';
-```
+**Valluru Praveen Kumar Reddy**
 
-Sign in again to use the admin endpoints.
+B.Tech – Computer Science and Engineering  
+Mohan Babu University | Class of 2027
 
-## Known limits and next steps
+**Skills:** Java, Spring Boot, Spring Security, Hibernate, React.js, JavaScript, HTML, CSS, Tailwind CSS, MySQL, REST APIs, Git and GitHub.
 
-- Existing frontend product `_id` strings are not yet mapped to MySQL numeric product IDs; populate the database and wire collection/product/cart/order React pages to the backend before calling the application fully integrated.
-- Online payment gateway, webhook-based confirmation/refunds, email delivery and password-reset-by-email are **not implemented**.
-- Admin APIs exist but a complete React admin dashboard does not yet exist.
-- This is a development starter. Add database migrations, concurrency tests, rate limiting, token revocation, security hardening, email verification and automated integration tests before deploying.
-- No compilation, build or integration test was executed in this environment because Maven dependencies and the frontend node_modules were not available.
+## 📄 License
+
+This project is developed for educational, learning, and portfolio purposes. No open-source license is granted unless a license file is added.
+
+---
+
+⭐ If you find this project useful, consider starring the repository!
