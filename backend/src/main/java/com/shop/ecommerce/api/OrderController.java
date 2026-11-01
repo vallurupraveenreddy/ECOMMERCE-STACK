@@ -1,0 +1,17 @@
+package com.shop.ecommerce.api;
+import com.shop.ecommerce.model.*;import com.shop.ecommerce.repo.*;import org.springframework.web.bind.annotation.*;import org.springframework.transaction.annotation.Transactional;
+import java.math.*;import java.util.*;
+@RestController @RequestMapping("/api/orders") public class OrderController {
+ private final ApiSupport api;private final OrderRepository orders;private final CartRepository carts;private final ProductRepository products;private final AddressRepository addresses;private final CouponController coupons;
+ public OrderController(ApiSupport a,OrderRepository o,CartRepository c,ProductRepository p,AddressRepository adr,CouponController co){api=a;orders=o;carts=c;products=p;addresses=adr;coupons=co;}
+ public record Checkout(Long addressId,String paymentMethod,String couponCode){}
+ @GetMapping public List<ShopOrder> all(){return orders.findByUserIdOrderByCreatedAtDesc(api.user().id);}
+ @GetMapping("/{id}") public ShopOrder one(@PathVariable Long id){return orders.findByIdAndUserId(id,api.user().id).orElseThrow(ApiSupport::missing);}
+ @PostMapping @Transactional public ShopOrder checkout(@RequestBody Checkout payload){User u=api.user();List<CartItem> cart=carts.findByUserId(u.id);if(cart.isEmpty())throw ApiSupport.bad("Cart is empty");Address addr=addresses.findByIdAndUserId(payload.addressId(),u.id).orElseThrow(()->ApiSupport.bad("Select a valid address"));if(!"COD".equals(payload.paymentMethod()))throw ApiSupport.bad("Only COD is supported until a verified payment provider is integrated");
+ ShopOrder order=new ShopOrder();order.user=u;order.paymentMethod="COD";order.shippingAddress=String.join(", ",addr.fullName,addr.line1,addr.city,addr.state==null?"":addr.state,addr.postalCode);
+ BigDecimal subtotal=BigDecimal.ZERO;
+ for(CartItem line:cart){Product product=products.findById(line.product.id).orElseThrow(ApiSupport::missing);if(!product.active||line.quantity<1||product.stock<line.quantity)throw ApiSupport.bad("Out of stock: "+product.name);product.stock-=line.quantity;products.save(product);OrderLine item=new OrderLine();item.order=order;item.productId=product.id;item.productName=product.name;item.size=line.size;item.quantity=line.quantity;item.unitPrice=product.price;item.lineTotal=product.price.multiply(BigDecimal.valueOf(line.quantity));subtotal=subtotal.add(item.lineTotal);order.items.add(item);}
+ order.subtotal=subtotal;order.discount=BigDecimal.ZERO;if(payload.couponCode()!=null&&!payload.couponCode().isBlank()){Coupon c=coupons.valid(payload.couponCode(),subtotal);BigDecimal value=subtotal.multiply(BigDecimal.valueOf(c.discountPercent)).divide(BigDecimal.valueOf(100),2,RoundingMode.HALF_UP);if(c.maxDiscount!=null)value=value.min(c.maxDiscount);order.discount=value;}
+ order.shipping=subtotal.compareTo(new BigDecimal("999"))>=0?BigDecimal.ZERO:new BigDecimal("49");order.total=subtotal.subtract(order.discount).add(order.shipping);ShopOrder saved=orders.save(order);carts.deleteByUserId(u.id);return saved;}
+ @PostMapping("/{id}/cancel") @Transactional public ShopOrder cancel(@PathVariable Long id){ShopOrder order=one(id);if(!List.of("PLACED","CONFIRMED").contains(order.status))throw ApiSupport.bad("This order cannot be cancelled");order.status="CANCELLED";for(OrderLine line:order.items)products.findById(line.productId).ifPresent(p->{p.stock+=line.quantity;products.save(p);});return orders.save(order);}
+}
